@@ -1,16 +1,35 @@
-import { StyleSheet, Text, View } from "react-native";
-import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import ROUTES from "../index";
 import Notes from "../../screens/Home/Notes";
 import colors from "../../data/styling/colors";
 import NoteDetails from "../../screens/Home/NoteDetails";
+import { deleteToken } from "../../api/storage";
+import UserContext from "../../context/UserContext";
+
 const Stack = createNativeStackNavigator();
 
 const HomeNav = () => {
+  //Add Global Variable
+  const [authenticated, setAuthenticated] = useContext(UserContext);
   return (
-    <Stack.Navigator>
+    //add logout icon with delete Auth onPress
+    <Stack.Navigator
+      screenOptions={{
+        headerRight: () => {
+          <TouchableOpacity
+            onPress={async () => {
+              await deleteToken();
+              setAuthenticated(false);
+            }}
+          >
+            <MaterialIcons name="logout" size={24} color="red" />;
+          </TouchableOpacity>;
+        },
+      }}
+    >
       <Stack.Screen
         name={ROUTES.HOME.NOTES}
         component={Notes}

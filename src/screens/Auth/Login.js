@@ -5,20 +5,39 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import colors from "../../data/styling/colors";
 import { useNavigation } from "@react-navigation/native";
 import ROUTES from "../../navigation";
+import { useMutation } from "@tanstack/react-query";
+import { login } from "../../api/auth";
+import UserContext from "../../context/UserContext";
 const Login = () => {
   const navigation = useNavigation();
+  // add the Global Variable
+  const [authenticated, setAuthenticated] = useContext(UserContext);
   const [userInfo, setUserInfo] = useState({
     email: "",
     password: "",
   });
-
+  //Mutation to send data to the backend
+  const { mutate } = useMutation({
+    mutationFn: () => login(userInfo),
+    onSuccess: () => {
+      setAuthenticated(true);
+    },
+    onError: (error) => {
+      console.log(error);
+      if (error.request._response) console.log(error.request._response);
+      if (error.response) console.log(error.response);
+      else if (error.request) console.log(error.request);
+    },
+  });
   const handleLogin = () => {
-    console.log(userInfo);
+    // console.log(userInfo);
+    mutate();
   };
+
   return (
     <View
       style={{

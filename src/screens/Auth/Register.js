@@ -1,22 +1,60 @@
 import {
+  Image,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import colors from "../../data/styling/colors";
 import { useNavigation } from "@react-navigation/native";
+import { useMutation } from "@tanstack/react-query";
+import { register } from "../../api/auth";
+import * as ImagePicker from "expo-image-picker";
+import UserContext from "../../context/UserContext";
 const Register = () => {
   const navigation = useNavigation();
+  const [authenticated, setAuthenticated] = useContext(UserContext);
   const [userInfo, setUserInfo] = useState({
     email: "",
     password: "",
+    name: "",
+  });
+  // Adding the image picker
+  const [image, setImage] = useState(null);
+  const { mutate } = useMutation({
+    mutationFn: () => register(userInfo, image),
+    onSuccess: () => {
+      setAuthenticated(true);
+    },
+    onError: (error) => {
+      console.log(error);
+      if (error.request._response) console.log(error.request._response);
+      if (error.response) console.log(error.response);
+      else if (error.request) console.log(error.request);
+    },
   });
 
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
   const handleRegister = () => {
-    console.log(userInfo);
+    // console.log(userInfo);
+    mutate();
   };
   return (
     <View
@@ -54,7 +92,18 @@ const Register = () => {
           value={userInfo.email}
           onChangeText={(text) => setUserInfo({ ...userInfo, email: text })}
         />
-
+        <TextInput
+          style={{
+            backgroundColor: colors.white,
+            padding: 10,
+            borderRadius: 5,
+            marginTop: 20,
+          }}
+          placeholder="Username"
+          autoCapitalize="none"
+          value={userInfo.name}
+          onChangeText={(text) => setUserInfo({ ...userInfo, name: text })}
+        />
         <TextInput
           style={{
             backgroundColor: colors.white,
@@ -68,12 +117,15 @@ const Register = () => {
           onChangeText={(text) => setUserInfo({ ...userInfo, password: text })}
         />
 
-        <TouchableOpacity style={{ marginTop: 20 }}>
+        <TouchableOpacity style={{ marginTop: 20 }} onPress={pickImage}>
           <Text style={{ color: colors.white, fontSize: 16 }}>
             Upload Profile Image
           </Text>
         </TouchableOpacity>
-
+        {/* adding the image  */}
+        {image && (
+          <Image source={{ uri: image }} style={{ width: 100, height: 100 }} />
+        )}
         <TouchableOpacity
           style={{
             backgroundColor: colors.white,
